@@ -83,3 +83,5 @@ const hal_t = {
         // Implement this function
     }
 }
+
+let g_hal = hal_t;
