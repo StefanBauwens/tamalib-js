@@ -123,6 +123,6 @@ function hw_set_buzzer_freq(freq) {
     }
 }
 
-void hw_enable_buzzer(en) {
+function hw_enable_buzzer(en) {
     g_hal.play_frequency(en);
 }

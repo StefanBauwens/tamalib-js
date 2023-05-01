@@ -40,7 +40,7 @@ const DEFAULT_FRAMERATE = 30; //fps
 let exec_mode = exec_mode_t.EXEC_MODE_RUN;
 let step_depth = 0;
 let screen_ts = 0;
-let ts_freq;
+//let ts_freq;
 let g_framerate = DEFAULT_FRAMERATE;
 let g_hal;
 

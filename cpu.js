@@ -321,27 +321,27 @@ let speed_ratio                             = 1;
 let ref_ts                                  = 0;
 
 let cpu_state = new state_t();
-cpuState.pc = pc;
-cpuState.x = x;
-cpuState.y = y;
-cpuState.a = a;
-cpuState.b = b;
-cpuState.np = np;
-cpuState.sp = sp;
-cpuState.flags = flags;
+cpu_state.pc = pc;
+cpu_state.x = x;
+cpu_state.y = y;
+cpu_state.a = a;
+cpu_state.b = b;
+cpu_state.np = np;
+cpu_state.sp = sp;
+cpu_state.flags = flags;
 
-cpuState.tick_counter = tick_counter;
-cpuState.clk_timer_timestamp = clk_timer_timestamp;
-cpuState.prog_timer_timestamp = prog_timer_timestamp;
-cpuState.prog_timer_enabled = prog_timer_enabled;
-cpuState.prog_timer_data = prog_timer_data;
-cpuState.prog_timer_rld = prog_timer_rld;
+cpu_state.tick_counter = tick_counter;
+cpu_state.clk_timer_timestamp = clk_timer_timestamp;
+cpu_state.prog_timer_timestamp = prog_timer_timestamp;
+cpu_state.prog_timer_enabled = prog_timer_enabled;
+cpu_state.prog_timer_data = prog_timer_data;
+cpu_state.prog_timer_rld = prog_timer_rld;
 
-cpuState.call_depth = call_depth;
+cpu_state.call_depth = call_depth;
 
-cpuState.interrupts = interrupts;
+cpu_state.interrupts = interrupts;
 
-cpuState.memory = memory;
+cpu_state.memory = memory;
 
 function cpu_add_bp(list, addr) {
     //TODO: Not implemented
@@ -838,7 +838,7 @@ function op_calz_cb(arg0, arg1) {
 	call_depth++;
 }
 
-function op_ret_cb(u8_t arg0, u8_t arg1) {
+function op_ret_cb(arg0, arg1) {
 	next_pc = M(sp) | (M(sp + 1) << 4) | (M(sp + 2) << 8) | (PCB() << 12);
 	sp = (sp + 3) & 0xFF;
 	call_depth--;
@@ -962,7 +962,7 @@ function op_adc_yh_cb(arg0, arg1) {
 }
 
 function op_adc_yl_cb(arg0, arg1) {
-	u8_t tmp;
+	let tmp;
 
 	tmp = YL() + arg0 + C();
 	y = (tmp & 0xF) | (YH() << 4) | (YP() << 8);
@@ -1477,7 +1477,7 @@ function op_not_cb(arg0, arg1) {
 }
 
 /* The E0C6S46 supported instructions */
-const ops[] = {
+const ops = [
 	new op_t("PSET #0x%02X            "  , 0xE40, MASK_7B , 0, 0    , 5 , op_pset_cb), // PSET
 	new op_t("JP   #0x%02X            "  , 0x000, MASK_4B , 0, 0    , 5 , op_jp_cb), // JP
 	new op_t("JP   C #0x%02X          "  , 0x200, MASK_4B , 0, 0    , 5 , op_jp_c_cb), // JP_C
@@ -1587,8 +1587,8 @@ const ops[] = {
 	new op_t("SCPY R(#0x%02X)         "  , 0xF3C, MASK_10B, 0, 0    , 7 , op_scpy_cb), // SCPY
 	new op_t("NOT  R(#0x%02X)         "  , 0xD0F, 0xFCF   , 4, 0    , 7 , op_not_cb), // NOT
 
-	new op_t(NULL, 0, 0, 0, 0, 0, NULL},
-};
+	new op_t(NULL, 0, 0, 0, 0, 0, NULL)
+];
 
 function wait_for_cycles(since, cycles) {
 	let deadline;
