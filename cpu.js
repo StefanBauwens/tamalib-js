@@ -293,10 +293,14 @@ let flags                                   = 0;
 let g_program                               = NULL;
 let memory                                  = new Array(MEM_BUFFER_SIZE());
 
-let inputs                                  = new Array(INPUT_PORT_NUM).fill(0);
+//let inputs                                  = new Array(INPUT_PORT_NUM).fill(0);
+let inputs = [];
+for (let i = 0; i < INPUT_PORT_NUM; i++) {
+    inputs.push(new input_port_t());
+}
 
 /* Interrupts (in priority order) */
-const interrupts = [
+let interrupts = [
     new interrupt_t(0x0, 0x0, 0, 0x0C), // Prog timer
     new interrupt_t(0x0, 0x0, 0, 0x0A), // Serial interface
     new interrupt_t(0x0, 0x0, 0, 0x08), // Input (K10-K13)
@@ -364,6 +368,7 @@ function cpu_get_depth() {
 }
 
 function generate_interrupt(slot, bit) {
+    console.log("generate interupt slot: " + slot +"  bit: " + bit);
     /* Set the factor flag no matter what */
     interrupts[slot].factor_flag_reg = interrupts[slot].factor_flag_reg | (0x1 << bit);
 
@@ -374,7 +379,9 @@ function generate_interrupt(slot, bit) {
 }
 
 function cpu_set_input_pin(pin, state) {
+    console.log("cpu set input pin :" + pin + " state: " + state);
     /* Set the I/O */
+    console.log("input pos: " +(pin & 0x4) + "states: " + inputs[pin & 0x4].states);
     inputs[pin & 0x4].states = (inputs[pin & 0x4].states & ~(0x1 << (pin & 0x3))) | (state << (pin & 0x3));
 
     /* Trigger the interrupt (TODO: handle relation register) */

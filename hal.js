@@ -1,3 +1,6 @@
+//const canvas = document.getElementById("canvas");
+//const ctx = canvas.getContext("2d");
+
 const NULL = 0;
 
 const log_level_t = {
@@ -11,31 +14,31 @@ const log_level_t = {
  * NOTE: This structure acts as an abstraction layer between TamaLIB and the OS/SDK.
  * All pointers MUST be implemented, but some implementations can be left empty.
  */
-const hal_t = {
+const hal_t = {    
     /* Memory allocation functions
     * NOTE: Needed only if breakpoints support is required.
     */
     malloc: (size) => {
-        // Implement this function
+        // unused
     },
     free: (ptr) => {
-        // Implement this function
+        // unused
     },
 
-    /* What to do if the CPU has halted
-    */
+    /* What to do if the CPU has halted */
     halt: () => {
-        // Implement this function
+        // unused
     },
 
     /* Log related function
     * NOTE: Needed only if log messages are required.
     */
     is_log_enabled: (level) => {
-        // Implement this function
+        return false;//true;
     },
     log: (level, buff, ...args) => {
-        // Implement this function
+        // unused
+        //console.log(buff);
     },
 
     /* Clock related functions
@@ -43,10 +46,10 @@ const hal_t = {
     * of ~30 us (1/32768) is required for a cycle accurate emulation.
     */
     sleep_until: (ts) => {
-        // Implement this function
+        while((ts - g_hal.get_timestamp()) > 0);
     },
     get_timestamp: () => {
-        // Implement this function
+        return Date.now() * 1000; //micro seconds
     },
 
     /* Screen related functions
@@ -59,7 +62,8 @@ const hal_t = {
         // Implement this function
     },
     set_lcd_matrix: (x, y, val) => {
-        // Implement this function
+        ctx.fillStyle = val? '#000000' : '#AAAAAA';
+        ctx.fillRect(x*10, y * 10, 10, 10)
     },
     set_lcd_icon: (icon, val) => {
         // Implement this function
@@ -84,4 +88,4 @@ const hal_t = {
     }
 }
 
-let g_hal = hal_t;
+//let g_hal = hal_t;
