@@ -10,10 +10,10 @@ const MEM_DISPLAY2_SIZE	                    = 0x050;
 const MEM_IO_ADDR		                    = 0xF00;
 const MEM_IO_SIZE		                    = 0x080;
 
-/* Asign the value 1 to this if you want to reduce the footprint of the memory buffer from 4096 u4_t (most likely bytes)
+/* Asign this value to true if you want to reduce the footprint of the memory buffer from 4096 u4_t (most likely bytes)
  * to 464 u8_t (bytes for sure), while increasing slightly the number of operations needed to read/write from/to it.
  */
-const LOW_FOOTPRINT                         = 1;
+const LOW_FOOTPRINT                         = true;
 
 let MEM_BUFFER_SIZE;
 let RAM_TO_MEMORY;
@@ -31,7 +31,7 @@ let GET_DISP2_MEMORY;
 let GET_IO_MEMORY;
 let GET_MEMORY;
 
-if (LOW_FOOTPRINT == 1)
+if (LOW_FOOTPRINT)
 {
     /* Invalid memory areas are not buffered to reduce the footprint of the library in memory */
     MEM_BUFFER_SIZE                         = () => (MEM_RAM_SIZE + MEM_DISPLAY1_SIZE + MEM_DISPLAY2_SIZE + MEM_IO_SIZE)/2;
@@ -72,7 +72,7 @@ if (LOW_FOOTPRINT == 1)
     GET_DISP2_MEMORY                        = (buffer, n) =>((buffer[DISP2_TO_MEMORY(n)] >> (((n) % 2) << 2)) & 0xF);
     GET_IO_MEMORY                           = (buffer, n) =>((buffer[IO_TO_MEMORY(n)] >> (((n) % 2) << 2)) & 0xF);
     GET_MEMORY                              = (buffer, n) => {
-                                                    ((buffer[
+                                                    return ((buffer[
                                                     ((n) < (MEM_RAM_ADDR + MEM_RAM_SIZE)) ? RAM_TO_MEMORY(n) :
                                                     ((n) < MEM_DISPLAY1_ADDR) ? 0 :
                                                     ((n) < (MEM_DISPLAY1_ADDR + MEM_DISPLAY1_SIZE)) ? DISP1_TO_MEMORY(n) :
@@ -146,29 +146,29 @@ class interrupt_t {
 }
 
 class state_t {
-  constructor() {
-    this.pc = null;
-    this.x = null;
-    this.y = null;
-    this.a = null;
-    this.b = null;
-    this.np = null;
-    this.sp = null;
-    this.flags = null;
-      
-    this.tick_counter = null;
-    this.clk_timer_timestamp = null;
-    this.prog_timer_timestamp = null;
-    this.prog_timer_enabled = null;
-    this.prog_timer_data = null;
-    this.prog_timer_rld = null;
-      
-    this.call_depth = null;
-      
-    this.interrupts = null;
-      
-    this.memory = null;
-  }
+    constructor() {
+        this.pc = null;
+        this.x = null;
+        this.y = null;
+        this.a = null;
+        this.b = null;
+        this.np = null;
+        this.sp = null;
+        this.flags = null;
+
+        this.tick_counter = null;
+        this.clk_timer_timestamp = null;
+        this.prog_timer_timestamp = null;
+        this.prog_timer_enabled = null;
+        this.prog_timer_data = null;
+        this.prog_timer_rld = null;
+
+        this.call_depth = null;
+
+        this.interrupts = null;
+
+        this.memory = null;
+    }
 }
 
 //cpu.c
@@ -260,15 +260,15 @@ const REG_PROG_TIMER_CLK_SEL                = 0xF79;
 const INPUT_PORT_NUM                        = 2;
 
 class op_t {
-  constructor(log, code, mask, shift_arg0, mask_arg0, cycles, cb) {
-    this.log = log;
-    this.code = code;
-    this.mask = mask;
-    this.shift_arg0 = shift_arg0;
-this.mask_arg0 = mask_arg0;                     // != 0 only if there are two arguments
-    this.cycles = cycles;
-    this.cb = cb;
-  }
+    constructor(log, code, mask, shift_arg0, mask_arg0, cycles, cb) {
+        this.log = log;
+        this.code = code;
+        this.mask = mask;
+        this.shift_arg0 = shift_arg0;
+        this.mask_arg0 = mask_arg0;         // != 0 only if there are two arguments
+        this.cycles = cycles;
+        this.cb = cb;
+    }
 }
 
 class input_port_t {
@@ -291,7 +291,7 @@ let sp                                      = 0;
 let flags                                   = 0;
 
 let g_program                               = NULL;
-let memory                                  = new Array(MEM_BUFFER_SIZE());
+let memory                                  = new Array(MEM_BUFFER_SIZE());//Uint8Array(MEM_BUFFER_SIZE());
 
 //let inputs                                  = new Array(INPUT_PORT_NUM).fill(0);
 let inputs = [];
@@ -320,32 +320,11 @@ let prog_timer_data                         = 0;
 let prog_timer_rld                          = 0;
 
 let tick_counter                            = 0;
-let ts_freq                                 = 0;
+let ts_freq;
 let speed_ratio                             = 1;
-let ref_ts                                  = 0;
+let ref_ts;
 
 let cpu_state = new state_t();
-cpu_state.pc = pc;
-cpu_state.x = x;
-cpu_state.y = y;
-cpu_state.a = a;
-cpu_state.b = b;
-cpu_state.np = np;
-cpu_state.sp = sp;
-cpu_state.flags = flags;
-
-cpu_state.tick_counter = tick_counter;
-cpu_state.clk_timer_timestamp = clk_timer_timestamp;
-cpu_state.prog_timer_timestamp = prog_timer_timestamp;
-cpu_state.prog_timer_enabled = prog_timer_enabled;
-cpu_state.prog_timer_data = prog_timer_data;
-cpu_state.prog_timer_rld = prog_timer_rld;
-
-cpu_state.call_depth = call_depth;
-
-cpu_state.interrupts = interrupts;
-
-cpu_state.memory = memory;
 
 function cpu_add_bp(list, addr) {
     //TODO: Not implemented
@@ -360,6 +339,27 @@ function cpu_set_speed(speed) {
 }
 
 function cpu_get_state() {
+    cpu_state.pc = pc;
+    cpu_state.x = x;
+    cpu_state.y = y;
+    cpu_state.a = a;
+    cpu_state.b = b;
+    cpu_state.np = np;
+    cpu_state.sp = sp;
+    cpu_state.flags = flags;
+
+    cpu_state.tick_counter = tick_counter;
+    cpu_state.clk_timer_timestamp = clk_timer_timestamp;
+    cpu_state.prog_timer_timestamp = prog_timer_timestamp;
+    cpu_state.prog_timer_enabled = prog_timer_enabled;
+    cpu_state.prog_timer_data = prog_timer_data;
+    cpu_state.prog_timer_rld = prog_timer_rld;
+    
+    cpu_state.call_depth = call_depth;
+
+    cpu_state.interrupts = interrupts;
+
+    cpu_state.memory = memory;
     return cpu_state;
 }
 
@@ -368,7 +368,6 @@ function cpu_get_depth() {
 }
 
 function generate_interrupt(slot, bit) {
-    console.log("generate interupt slot: " + slot +"  bit: " + bit);
     /* Set the factor flag no matter what */
     interrupts[slot].factor_flag_reg = interrupts[slot].factor_flag_reg | (0x1 << bit);
 
@@ -381,13 +380,13 @@ function generate_interrupt(slot, bit) {
 function cpu_set_input_pin(pin, state) {
     console.log("cpu set input pin :" + pin + " state: " + state);
     /* Set the I/O */
-    console.log("input pos: " +(pin & 0x4) + "states: " + inputs[pin & 0x4].states);
     inputs[pin & 0x4].states = (inputs[pin & 0x4].states & ~(0x1 << (pin & 0x3))) | (state << (pin & 0x3));
 
     /* Trigger the interrupt (TODO: handle relation register) */
     if (state == pin_state_t.PIN_STATE_LOW) {
         switch ((pin & 0x4) >> 2) {
             case 0:
+                console.log("here");
                 generate_interrupt(int_slot_t.INT_K00_K03_SLOT, pin & 0x3);
                 break;
 
@@ -403,7 +402,7 @@ function cpu_sync_ref_timestamp() {
 }
 
 function get_io(n) {
-	let tmp = 0;
+	let tmp;
 
 	switch (n) {
 		case REG_CLK_INT_FACTOR_FLAGS:
@@ -484,6 +483,7 @@ function get_io(n) {
 
 		case REG_K00_K03_INPUT_PORT:
 			/* Input port (K00-K03) */
+            console.log("input states: " + inputs[0].states); 
 			return inputs[0].states;
 
 		case REG_K10_K13_INPUT_PORT:
@@ -675,7 +675,7 @@ function set_lcd(n, v) {
 
 function get_memory(n) {
 	let res = 0;
-
+    
     if (n < MEM_RAM_SIZE) {
 		/* RAM */
         g_hal.log(log_level_t.LOG_MEMORY, "RAM              - ");
@@ -691,6 +691,7 @@ function get_memory(n) {
 	} else if (n >= MEM_IO_ADDR && n < (MEM_IO_ADDR + MEM_IO_SIZE)) {
 		/* I/O Memory */
 		g_hal.log(log_level_t.LOG_MEMORY, "I/O              - ");
+        console.log("getting io");
 		res = get_io(n);
 	} else {
 		g_hal.log(log_level_t.LOG_ERROR, "Read from invalid memory address 0x%03X - PC = 0x%04X\n", n, pc);
@@ -741,9 +742,8 @@ function cpu_refresh_hw() {
         { addr: 0, size: 0 },                                   // end of list
     ];
 
-    for (let i = 0; refresh_locs[i].size !== 0; i++) {
-        const { addr, size } = refresh_locs[i];
-        for (let n = addr; n < addr + size; n++) {
+    for (let i = 0; refresh_locs[i].size != 0; i++) {
+        for (let n = refresh_locs[i].addr; n < (refresh_locs[i].addr + refresh_locs[i].size); n++) {
             set_memory(n, GET_MEMORY(memory, n));
         }
     }
@@ -1419,7 +1419,7 @@ function op_acpx_cb(arg0, arg1) {
 		if (tmp >> 4) { SET_C(); } else { CLEAR_C(); }
 	}
 	if (!M(x)) { SET_Z(); } else { CLEAR_Z(); }
-	x = ((x + 1) & 0xFF) | (XP << 8);
+	x = ((x + 1) & 0xFF) | (XP() << 8);
 }
 
 function op_acpy_cb(arg0, arg1) {
@@ -1439,7 +1439,7 @@ function op_acpy_cb(arg0, arg1) {
 		if (tmp >> 4) { SET_C(); } else { CLEAR_C(); }
 	}
 	if (!M(y)) { SET_Z(); } else { CLEAR_Z(); }
-	y = ((y + 1) & 0xFF) | (YP << 8);
+	y = ((y + 1) & 0xFF) | (YP() << 8);
 }
 
 function op_scpx_cb(arg0, arg1) {
@@ -1457,7 +1457,7 @@ function op_scpx_cb(arg0, arg1) {
 	}
 	if (tmp >> 4) { SET_C(); } else { CLEAR_C(); }
 	if (!M(x)) { SET_Z(); } else { CLEAR_Z(); }
-	x = ((x + 1) & 0xFF) | (XP << 8);
+	x = ((x + 1) & 0xFF) | (XP() << 8);
 }
 
 function op_scpy_cb(arg0, arg1) {
@@ -1475,7 +1475,7 @@ function op_scpy_cb(arg0, arg1) {
 	}
 	if (tmp >> 4) { SET_C(); } else { CLEAR_C(); }
 	if (!M(y)) { SET_Z(); } else { CLEAR_Z(); }
-	y = ((y + 1) & 0xFF) | (YP << 8);
+	y = ((y + 1) & 0xFF) | (YP() << 8);
 }
 
 function op_not_cb(arg0, arg1) {

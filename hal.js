@@ -34,11 +34,30 @@ const hal_t = {
     * NOTE: Needed only if log messages are required.
     */
     is_log_enabled: (level) => {
-        return false;//true;
+        return false;// true;
     },
     log: (level, buff, ...args) => {
         // unused
-        //console.log(buff);
+        return;
+        
+        let level_str = "";
+        switch(level)
+        {
+            case log_level_t.LOG_ERROR:
+                level_str = "[LOG ERROR]";
+                console.error("ERROR: " + buff);
+                break;
+            case log_level_t.LOG_INFO:
+                level_str = "[LOG INFO]";
+                break;
+            case log_level_t.LOG_MEMORY:
+                level_str = "[LOG MEMORY]";
+                break;
+            case log_level_t.LOG_CPU:
+                level_str = "[LOG CPU]";
+                break;
+        }
+        console.log(level_str + " "  +buff);
     },
 
     /* Clock related functions
@@ -59,6 +78,7 @@ const hal_t = {
     * rendering (at 30 fps).
     */
     update_screen: () => {
+        return 0;
         // Implement this function
     },
     set_lcd_matrix: (x, y, val) => {
@@ -85,6 +105,7 @@ const hal_t = {
     */
     handler: () => {
         // Implement this function
+        return 1;
     }
 }
 
