@@ -1716,7 +1716,7 @@ function cpu_step() {
 	op = g_program[pc];
 
 	/* Lookup the OP code */
-	for (i = 0; ops[i].log != NULL; i++) {
+    for (i = 0; ops[i].log != NULL; i++) {
 		if ((op & ops[i].mask) == ops[i].code) {
 			break;
 		}
@@ -1780,7 +1780,7 @@ function cpu_step() {
 	}
 
 	/* Check if there is any pending interrupt */
-	if (I && i > 0) { // Do not process interrupts after a PSET operation
+	if (I() && i > 0) { // Do not process interrupts after a PSET operation
 		process_interrupts();
 	}
 
@@ -1795,5 +1795,3 @@ function cpu_step() {
 
 	return 0;
 }
-
-
