@@ -38,10 +38,10 @@ if (LOW_FOOTPRINT)
 
 
     /* Maps the CPU memory to the memory buffer */
-    RAM_TO_MEMORY                           = (n) => ((n - MEM_RAM_ADDR) / 2);
-    DISP1_TO_MEMORY                         = (n) => ((n - MEM_DISPLAY1_ADDR + MEM_RAM_SIZE)/2);
-    DISP2_TO_MEMORY                         = (n) => ((n - MEM_DISPLAY2_ADDR + MEM_RAM_SIZE + MEM_DISPLAY1_SIZE)/2);
-    IO_TO_MEMORY                            = (n) => ((n - MEM_IO_ADDR + MEM_RAM_SIZE + MEM_DISPLAY1_SIZE + MEM_DISPLAY2_SIZE)/2);
+    RAM_TO_MEMORY                           = (n) => (Math.floor((n - MEM_RAM_ADDR) / 2));
+    DISP1_TO_MEMORY                         = (n) => (Math.floor((n - MEM_DISPLAY1_ADDR + MEM_RAM_SIZE)/2));
+    DISP2_TO_MEMORY                         = (n) => (Math.floor((n - MEM_DISPLAY2_ADDR + MEM_RAM_SIZE + MEM_DISPLAY1_SIZE)/2));
+    IO_TO_MEMORY                            = (n) => (Math.floor((n - MEM_IO_ADDR + MEM_RAM_SIZE + MEM_DISPLAY1_SIZE + MEM_DISPLAY2_SIZE)/2));
 
     SET_RAM_MEMORY                          = (buffer, n, v) =>{buffer[RAM_TO_MEMORY(n)] = (buffer[RAM_TO_MEMORY(n)] & ~(0xF << (((n) % 2) << 2))) | ((v) & 0xF) << (((n) % 2) << 2);};
     SET_DISP1_MEMORY                        = (buffer, n, v) =>{buffer[DISP1_TO_MEMORY(n)] = (buffer[DISP1_TO_MEMORY(n)] & ~(0xF << (((n) % 2) << 2))) | ((v) & 0xF) << (((n) % 2) << 2);};
