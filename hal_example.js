@@ -50,37 +50,11 @@ const hal_t = {
     * NOTE: Needed only if log messages are required.
     */
     is_log_enabled: (level) => {
-        return false;//true;
+        return false;
     },
     log: (level, buff, ...args) => {
-        // unused
-        return;
-        
-        let level_str = "";
-        switch(level)
-        {
-            case log_level_t.LOG_ERROR:
-                level_str = "[LOG ERROR]";
-                //console.error("ERROR: " + buff);
-                break;
-            case log_level_t.LOG_INFO:
-                level_str = "[LOG INFO]";
-                break;
-            case log_level_t.LOG_MEMORY:
-                level_str = "[LOG MEMORY]";
-                break;
-            case log_level_t.LOG_CPU:
-                level_str = "[LOG CPU]";
-                break;
-        }
-        /*
-        if (args.length == 0) {
-            console.log(buff);
-        } else {
-            console.log(buff, args);
-        }*/
+        return; // unused
         slog(buff, args);
-        //console.log(level_str + " "  +buff);
     },
 
     /* Clock related functions

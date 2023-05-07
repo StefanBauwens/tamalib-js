@@ -11,31 +11,30 @@ const log_level_t = {
  * NOTE: This structure acts as an abstraction layer between TamaLIB and the OS/SDK.
  * All pointers MUST be implemented, but some implementations can be left empty.
  */
-const hal_t = {
+const hal_t = {    
     /* Memory allocation functions
     * NOTE: Needed only if breakpoints support is required.
     */
     malloc: (size) => {
-        // Implement this function
+        // implement here
     },
     free: (ptr) => {
-        // Implement this function
+        // implement here
     },
 
-    /* What to do if the CPU has halted
-    */
+    /* What to do if the CPU has halted */
     halt: () => {
-        // Implement this function
+        // implement here
     },
 
     /* Log related function
     * NOTE: Needed only if log messages are required.
     */
     is_log_enabled: (level) => {
-        // Implement this function
+        return false; //implement here
     },
     log: (level, buff, ...args) => {
-        // Implement this function
+        // implement here
     },
 
     /* Clock related functions
@@ -43,10 +42,10 @@ const hal_t = {
     * of ~30 us (1/32768) is required for a cycle accurate emulation.
     */
     sleep_until: (ts) => {
-        // Implement this function
+        // implement here
     },
     get_timestamp: () => {
-        // Implement this function
+        // implement here
     },
 
     /* Screen related functions
@@ -56,13 +55,13 @@ const hal_t = {
     * rendering (at 30 fps).
     */
     update_screen: () => {
-        // Implement this function
+        // implement here
     },
     set_lcd_matrix: (x, y, val) => {
-        // Implement this function
+        // implement here
     },
     set_lcd_icon: (icon, val) => {
-        // Implement this function
+        // implement here
     },
 
     /* Sound related functions
@@ -70,18 +69,16 @@ const hal_t = {
     * play_frequency() decides whether the sound should be heard or not.
     */
     set_frequency: (freq) => {
-        // Implement this function
+        // implement here
     },
     play_frequency: (en) => {
-        // Implement this function
+        // implement here
     },
 
     /* Event handler from the main app (if any)
     * NOTE: This function usually handles button related
     */
     handler: () => {
-        // Implement this function
+        // implement here
     }
 }
-
-let g_hal = hal_t;
