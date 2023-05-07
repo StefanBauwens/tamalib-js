@@ -1,3 +1,8 @@
+function NumToHex(hexNum, length)
+{
+    return "0x" + hexNum.toString(16).toUpperCase().padStart(length, "0");
+}
+
 //cpu.h
 const MEMORY_SIZE                           = 4096;
  
@@ -13,7 +18,7 @@ const MEM_IO_SIZE		                    = 0x080;
 /* Asign this value to true if you want to reduce the footprint of the memory buffer from 4096 u4_t (most likely bytes)
  * to 464 u8_t (bytes for sure), while increasing slightly the number of operations needed to read/write from/to it.
  */
-const LOW_FOOTPRINT                         = true;
+const LOW_FOOTPRINT                         = false;//true;
 
 let MEM_BUFFER_SIZE;
 let RAM_TO_MEMORY;
@@ -378,7 +383,6 @@ function generate_interrupt(slot, bit) {
 }
 
 function cpu_set_input_pin(pin, state) {
-    console.log("cpu set input pin :" + pin + " state: " + state);
     /* Set the I/O */
     inputs[pin & 0x4].states = (inputs[pin & 0x4].states & ~(0x1 << (pin & 0x3))) | (state << (pin & 0x3));
 
@@ -386,7 +390,6 @@ function cpu_set_input_pin(pin, state) {
     if (state == pin_state_t.PIN_STATE_LOW) {
         switch ((pin & 0x4) >> 2) {
             case 0:
-                console.log("here");
                 generate_interrupt(int_slot_t.INT_K00_K03_SLOT, pin & 0x3);
                 break;
 
@@ -483,7 +486,6 @@ function get_io(n) {
 
 		case REG_K00_K03_INPUT_PORT:
 			/* Input port (K00-K03) */
-            console.log("input states: " + inputs[0].states); 
 			return inputs[0].states;
 
 		case REG_K10_K13_INPUT_PORT:
@@ -535,7 +537,8 @@ function get_io(n) {
 			break;
 
 		default:
-            g_hal.log(log_level_t.LOG_ERROR, "Read from unimplemented I/O 0x%03X - PC = 0x%04X\n", n, pc);
+            g_hal.log(log_level_t.LOG_ERROR, "Read from unimplemented I/O " + NumToHex(n, 3) + " - PC = " + NumToHex(pc, 4) + "\n");
+            //g_hal.log(log_level_t.LOG_ERROR, "Read from unimplemented I/O 0x%03X - PC = 0x%04X\n", n, pc);
 	}
 
 	return 0;
@@ -656,7 +659,8 @@ function set_io(n, v) {
 			break;
 
 		default:
-            g_hal.log(log_level_t.LOG_ERROR, "Write 0x%X to unimplemented I/O 0x%03X - PC = 0x%04X\n", v, n, pc);
+            g_hal.log(log_level_t.LOG_ERROR, "Write " + NumToHex(v, 0) + " to unimplemented I/O " + NumToHex(n, 3) + " - PC = " + NumToHex(pc, 4) + "\n");
+            //g_hal.log(log_level_t.LOG_ERROR, "Write 0x%X to unimplemented I/O 0x%03X - PC = 0x%04X\n", v, n, pc);
 	}
 }
 
@@ -674,6 +678,8 @@ function set_lcd(n, v) {
 }
 
 function get_memory(n) {
+    //console.log("n: " + n);
+    //console.log("mem io addr: " + MEM_IO_ADDR);
 	let res = 0;
     
     if (n < MEM_RAM_SIZE) {
@@ -691,20 +697,23 @@ function get_memory(n) {
 	} else if (n >= MEM_IO_ADDR && n < (MEM_IO_ADDR + MEM_IO_SIZE)) {
 		/* I/O Memory */
 		g_hal.log(log_level_t.LOG_MEMORY, "I/O              - ");
-        console.log("getting io");
+        //console.log("getting io");
 		res = get_io(n);
 	} else {
-		g_hal.log(log_level_t.LOG_ERROR, "Read from invalid memory address 0x%03X - PC = 0x%04X\n", n, pc);
+        g_hal.log(log_level_t.LOG_ERROR, "Read from invalid memory address " + NumToHex(n, 3) + " - PC = " + NumToHex(pc, 4) + "\n");
+		//g_hal.log(log_level_t.LOG_ERROR, "Read from invalid memory address 0x%03X - PC = 0x%04X\n", n, pc);
 		return 0;
 	}
 
-	g_hal.log(log_level_t.LOG_MEMORY, "Read  0x%X - Address 0x%03X - PC = 0x%04X\n", res, n, pc);
+    g_hal.log(log_level_t.LOG_MEMORY, "Read  " + NumToHex(res, 0) + " - Address " + NumToHex(n, 3) + " - PC = " + NumToHex(pc, 4) + "\n");
+	//g_hal.log(log_level_t.LOG_MEMORY, "Read  0x%X - Address 0x%03X - PC = 0x%04X\n", res, n, pc);
 
 	return res;
 }
 
 function set_memory(n, v)
 {
+    //console.log("n: " + n);
 	/* Cache any data written to a valid address, and process it */
 	if (n < MEM_RAM_SIZE) {
 		/* RAM */
@@ -722,15 +731,18 @@ function set_memory(n, v)
 		g_hal.log(log_level_t.LOG_MEMORY, "Display Memory 2 - ");
 	} else if (n >= MEM_IO_ADDR && n < (MEM_IO_ADDR + MEM_IO_SIZE)) {
 		/* I/O Memory */
+        //console.log("setting io");
+        //console.trace();
 		SET_IO_MEMORY(memory, n, v);
 		set_io(n, v);
 		g_hal.log(log_level_t.LOG_MEMORY, "I/O              - ");
 	} else {
-		g_hal.log(log_level_t.LOG_ERROR, "Write 0x%X to invalid memory address 0x%03X - PC = 0x%04X\n", v, n, pc);
+		g_hal.log(log_level_t.LOG_ERROR, "Write " + NumToHex(v, 0) + " to invalid memory address " + NumToHex(n, 3) + " - PC = " + NumToHex(pc, 4) + "\n");
+        //g_hal.log(log_level_t.LOG_ERROR, "Write 0x%X to invalid memory address 0x%03X - PC = 0x%04X\n", v, n, pc);
 		return;
 	}
-
-	g_hal.log(log_level_t.LOG_MEMORY, "Write 0x%X - Address 0x%03X - PC = 0x%04X\n", v, n, pc);
+    g_hal.log(log_level_t.LOG_MEMORY, "Write " + NumToHex(v, 0) + " - Address " + NumToHex(n, 3) + " - PC = " + NumToHex(pc, 4) + "\n");
+	//g_hal.log(log_level_t.LOG_MEMORY, "Write 0x%X - Address 0x%03X - PC = 0x%04X\n", v, n, pc);
 }
 
 function cpu_refresh_hw() {
@@ -1485,114 +1497,114 @@ function op_not_cb(arg0, arg1) {
 
 /* The E0C6S46 supported instructions */
 const ops = [
-	new op_t("PSET #0x%02X            "  , 0xE40, MASK_7B , 0, 0    , 5 , op_pset_cb), // PSET
-	new op_t("JP   #0x%02X            "  , 0x000, MASK_4B , 0, 0    , 5 , op_jp_cb), // JP
-	new op_t("JP   C #0x%02X          "  , 0x200, MASK_4B , 0, 0    , 5 , op_jp_c_cb), // JP_C
-	new op_t("JP   NC #0x%02X         "  , 0x300, MASK_4B , 0, 0    , 5 , op_jp_nc_cb), // JP_NC
-	new op_t("JP   Z #0x%02X          "  , 0x600, MASK_4B , 0, 0    , 5 , op_jp_z_cb), // JP_Z
-	new op_t("JP   NZ #0x%02X         "  , 0x700, MASK_4B , 0, 0    , 5 , op_jp_nz_cb), // JP_NZ
-	new op_t("JPBA                  "    , 0xFE8, MASK_12B, 0, 0    , 5 , op_jpba_cb), // JPBA
-	new op_t("CALL #0x%02X            "  , 0x400, MASK_4B , 0, 0    , 7 , op_call_cb), // CALL
-	new op_t("CALZ #0x%02X            "  , 0x500, MASK_4B , 0, 0    , 7 , op_calz_cb), // CALZ
-	new op_t("RET                   "    , 0xFDF, MASK_12B, 0, 0    , 7 , op_ret_cb), // RET
-	new op_t("RETS                  "    , 0xFDE, MASK_12B, 0, 0    , 12, op_rets_cb), // RETS
-	new op_t("RETD #0x%02X            "  , 0x100, MASK_4B , 0, 0    , 12, op_retd_cb), // RETD
-	new op_t("NOP5                  "    , 0xFFB, MASK_12B, 0, 0    , 5 , op_nop5_cb), // NOP5
-	new op_t("NOP7                  "    , 0xFFF, MASK_12B, 0, 0    , 7 , op_nop7_cb), // NOP7
-	new op_t("HALT                  "    , 0xFF8, MASK_12B, 0, 0    , 5 , op_halt_cb), // HALT
-	new op_t("INC  X #0x%02X          "  , 0xEE0, MASK_12B, 0, 0    , 5 , op_inc_x_cb), // INC_X
-	new op_t("INC  Y #0x%02X          "  , 0xEF0, MASK_12B, 0, 0    , 5 , op_inc_y_cb), // INC_Y
-	new op_t("LD   X #0x%02X          "  , 0xB00, MASK_4B , 0, 0    , 5 , op_ld_x_cb), // LD_X
-	new op_t("LD   Y #0x%02X          "  , 0x800, MASK_4B , 0, 0    , 5 , op_ld_y_cb), // LD_Y
-	new op_t("LD   XP R(#0x%02X)      "  , 0xE80, MASK_10B, 0, 0    , 5 , op_ld_xp_r_cb), // LD_XP_R
-	new op_t("LD   XH R(#0x%02X)      "  , 0xE84, MASK_10B, 0, 0    , 5 , op_ld_xh_r_cb), // LD_XH_R
-	new op_t("LD   XL R(#0x%02X)      "  , 0xE88, MASK_10B, 0, 0    , 5 , op_ld_xl_r_cb), // LD_XL_R
-	new op_t("LD   YP R(#0x%02X)      "  , 0xE90, MASK_10B, 0, 0    , 5 , op_ld_yp_r_cb), // LD_YP_R
-	new op_t("LD   YH R(#0x%02X)      "  , 0xE94, MASK_10B, 0, 0    , 5 , op_ld_yh_r_cb), // LD_YH_R
-	new op_t("LD   YL R(#0x%02X)      "  , 0xE98, MASK_10B, 0, 0    , 5 , op_ld_yl_r_cb), // LD_YL_R
-	new op_t("LD   R(#0x%02X) XP      "  , 0xEA0, MASK_10B, 0, 0    , 5 , op_ld_r_xp_cb), // LD_R_XP
-	new op_t("LD   R(#0x%02X) XH      "  , 0xEA4, MASK_10B, 0, 0    , 5 , op_ld_r_xh_cb), // LD_R_XH
-	new op_t("LD   R(#0x%02X) XL      "  , 0xEA8, MASK_10B, 0, 0    , 5 , op_ld_r_xl_cb), // LD_R_XL
-	new op_t("LD   R(#0x%02X) YP      "  , 0xEB0, MASK_10B, 0, 0    , 5 , op_ld_r_yp_cb), // LD_R_YP
-	new op_t("LD   R(#0x%02X) YH      "  , 0xEB4, MASK_10B, 0, 0    , 5 , op_ld_r_yh_cb), // LD_R_YH
-	new op_t("LD   R(#0x%02X) YL      "  , 0xEB8, MASK_10B, 0, 0    , 5 , op_ld_r_yl_cb), // LD_R_YL
-	new op_t("ADC  XH #0x%02X         "  , 0xA00, MASK_8B , 0, 0    , 7 , op_adc_xh_cb), // ADC_XH
-	new op_t("ADC  XL #0x%02X         "  , 0xA10, MASK_8B , 0, 0    , 7 , op_adc_xl_cb), // ADC_XL
-	new op_t("ADC  YH #0x%02X         "  , 0xA20, MASK_8B , 0, 0    , 7 , op_adc_yh_cb), // ADC_YH
-	new op_t("ADC  YL #0x%02X         "  , 0xA30, MASK_8B , 0, 0    , 7 , op_adc_yl_cb), // ADC_YL
-	new op_t("CP   XH #0x%02X         "  , 0xA40, MASK_8B , 0, 0    , 7 , op_cp_xh_cb), // CP_XH
-	new op_t("CP   XL #0x%02X         "  , 0xA50, MASK_8B , 0, 0    , 7 , op_cp_xl_cb), // CP_XL
-	new op_t("CP   YH #0x%02X         "  , 0xA60, MASK_8B , 0, 0    , 7 , op_cp_yh_cb), // CP_YH
-	new op_t("CP   YL #0x%02X         "  , 0xA70, MASK_8B , 0, 0    , 7 , op_cp_yl_cb), // CP_YL
-	new op_t("LD   R(#0x%02X) #0x%02X   ", 0xE00, MASK_6B , 4, 0x030, 5 , op_ld_r_i_cb), // LD_R_I
-	new op_t("LD   R(#0x%02X) Q(#0x%02X)", 0xEC0, MASK_8B , 2, 0x00C, 5 , op_ld_r_q_cb), // LD_R_Q
-	new op_t("LD   A M(#0x%02X)       "  , 0xFA0, MASK_8B , 0, 0    , 5 , op_ld_a_mn_cb), // LD_A_MN
-	new op_t("LD   B M(#0x%02X)       "  , 0xFB0, MASK_8B , 0, 0    , 5 , op_ld_b_mn_cb), // LD_B_MN
-	new op_t("LD   M(#0x%02X) A       "  , 0xF80, MASK_8B , 0, 0    , 5 , op_ld_mn_a_cb), // LD_MN_A
-	new op_t("LD   M(#0x%02X) B       "  , 0xF90, MASK_8B , 0, 0    , 5 , op_ld_mn_b_cb), // LD_MN_B
-	new op_t("LDPX MX #0x%02X         "  , 0xE60, MASK_8B , 0, 0    , 5 , op_ldpx_mx_cb), // LDPX_MX
-	new op_t("LDPX R(#0x%02X) Q(#0x%02X)", 0xEE0, MASK_8B , 2, 0x00C, 5 , op_ldpx_r_cb), // LDPX_R
-	new op_t("LDPY MY #0x%02X         "  , 0xE70, MASK_8B , 0, 0    , 5 , op_ldpy_my_cb), // LDPY_MY
-	new op_t("LDPY R(#0x%02X) Q(#0x%02X)", 0xEF0, MASK_8B , 2, 0x00C, 5 , op_ldpy_r_cb), // LDPY_R
-	new op_t("LBPX #0x%02X            "  , 0x900, MASK_4B , 0, 0    , 5 , op_lbpx_cb), // LBPX
-	new op_t("SET  #0x%02X            "  , 0xF40, MASK_8B , 0, 0    , 7 , op_set_cb), // SET
-	new op_t("RST  #0x%02X            "  , 0xF50, MASK_8B , 0, 0    , 7 , op_rst_cb), // RST
-	new op_t("SCF                   "    , 0xF41, MASK_12B, 0, 0    , 7 , op_scf_cb), // SCF
-	new op_t("RCF                   "    , 0xF5E, MASK_12B, 0, 0    , 7 , op_rcf_cb), // RCF
-	new op_t("SZF                   "    , 0xF42, MASK_12B, 0, 0    , 7 , op_szf_cb), // SZF
-	new op_t("RZF                   "    , 0xF5D, MASK_12B, 0, 0    , 7 , op_rzf_cb), // RZF
-	new op_t("SDF                   "    , 0xF44, MASK_12B, 0, 0    , 7 , op_sdf_cb), // SDF
-	new op_t("RDF                   "    , 0xF5B, MASK_12B, 0, 0    , 7 , op_rdf_cb), // RDF
-	new op_t("EI                    "    , 0xF48, MASK_12B, 0, 0    , 7 , op_ei_cb), // EI
-	new op_t("DI                    "    , 0xF57, MASK_12B, 0, 0    , 7 , op_di_cb), // DI
-	new op_t("INC  SP               "    , 0xFDB, MASK_12B, 0, 0    , 5 , op_inc_sp_cb), // INC_SP
-	new op_t("DEC  SP               "    , 0xFCB, MASK_12B, 0, 0    , 5 , op_dec_sp_cb), // DEC_SP
-	new op_t("PUSH R(#0x%02X)         "  , 0xFC0, MASK_10B, 0, 0    , 5 , op_push_r_cb), // PUSH_R
-	new op_t("PUSH XP               "    , 0xFC4, MASK_12B, 0, 0    , 5 , op_push_xp_cb), // PUSH_XP
-	new op_t("PUSH XH               "    , 0xFC5, MASK_12B, 0, 0    , 5 , op_push_xh_cb), // PUSH_XH
-	new op_t("PUSH XL               "    , 0xFC6, MASK_12B, 0, 0    , 5 , op_push_xl_cb), // PUSH_XL
-	new op_t("PUSH YP               "    , 0xFC7, MASK_12B, 0, 0    , 5 , op_push_yp_cb), // PUSH_YP
-	new op_t("PUSH YH               "    , 0xFC8, MASK_12B, 0, 0    , 5 , op_push_yh_cb), // PUSH_YH
-	new op_t("PUSH YL               "    , 0xFC9, MASK_12B, 0, 0    , 5 , op_push_yl_cb), // PUSH_YL
-	new op_t("PUSH F                "    , 0xFCA, MASK_12B, 0, 0    , 5 , op_push_f_cb), // PUSH_F
-	new op_t("POP  R(#0x%02X)         "  , 0xFD0, MASK_10B, 0, 0    , 5 , op_pop_r_cb), // POP_R
-	new op_t("POP  XP               "    , 0xFD4, MASK_12B, 0, 0    , 5 , op_pop_xp_cb), // POP_XP
-	new op_t("POP  XH               "    , 0xFD5, MASK_12B, 0, 0    , 5 , op_pop_xh_cb), // POP_XH
-	new op_t("POP  XL               "    , 0xFD6, MASK_12B, 0, 0    , 5 , op_pop_xl_cb), // POP_XL
-	new op_t("POP  YP               "    , 0xFD7, MASK_12B, 0, 0    , 5 , op_pop_yp_cb), // POP_YP
-	new op_t("POP  YH               "    , 0xFD8, MASK_12B, 0, 0    , 5 , op_pop_yh_cb), // POP_YH
-	new op_t("POP  YL               "    , 0xFD9, MASK_12B, 0, 0    , 5 , op_pop_yl_cb), // POP_YL
-	new op_t("POP  F                "    , 0xFDA, MASK_12B, 0, 0    , 5 , op_pop_f_cb), // POP_F
-	new op_t("LD   SPH R(#0x%02X)     "  , 0xFE0, MASK_10B, 0, 0    , 5 , op_ld_sph_r_cb), // LD_SPH_R
-	new op_t("LD   SPL R(#0x%02X)     "  , 0xFF0, MASK_10B, 0, 0    , 5 , op_ld_spl_r_cb), // LD_SPL_R
-	new op_t("LD   R(#0x%02X) SPH     "  , 0xFE4, MASK_10B, 0, 0    , 5 , op_ld_r_sph_cb), // LD_R_SPH
-	new op_t("LD   R(#0x%02X) SPL     "  , 0xFF4, MASK_10B, 0, 0    , 5 , op_ld_r_spl_cb), // LD_R_SPL
-	new op_t("ADD  R(#0x%02X) #0x%02X   ", 0xC00, MASK_6B , 4, 0x030, 7 , op_add_r_i_cb), // ADD_R_I
-	new op_t("ADD  R(#0x%02X) Q(#0x%02X)", 0xA80, MASK_8B , 2, 0x00C, 7 , op_add_r_q_cb), // ADD_R_Q
-	new op_t("ADC  R(#0x%02X) #0x%02X   ", 0xC40, MASK_6B , 4, 0x030, 7 , op_adc_r_i_cb), // ADC_R_I
-	new op_t("ADC  R(#0x%02X) Q(#0x%02X)", 0xA90, MASK_8B , 2, 0x00C, 7 , op_adc_r_q_cb), // ADC_R_Q
-	new op_t("SUB  R(#0x%02X) Q(#0x%02X)", 0xAA0, MASK_8B , 2, 0x00C, 7 , op_sub_cb), // SUB
-	new op_t("SBC  R(#0x%02X) #0x%02X   ", 0xB40, MASK_6B , 4, 0x030, 7 , op_sbc_r_i_cb), // SBC_R_I
-	new op_t("SBC  R(#0x%02X) Q(#0x%02X)", 0xAB0, MASK_8B , 2, 0x00C, 7 , op_sbc_r_q_cb), // SBC_R_Q
-	new op_t("AND  R(#0x%02X) #0x%02X   ", 0xC80, MASK_6B , 4, 0x030, 7 , op_and_r_i_cb), // AND_R_I
-	new op_t("AND  R(#0x%02X) Q(#0x%02X)", 0xAC0, MASK_8B , 2, 0x00C, 7 , op_and_r_q_cb), // AND_R_Q
-	new op_t("OR   R(#0x%02X) #0x%02X   ", 0xCC0, MASK_6B , 4, 0x030, 7 , op_or_r_i_cb), // OR_R_I
-	new op_t("OR   R(#0x%02X) Q(#0x%02X)", 0xAD0, MASK_8B , 2, 0x00C, 7 , op_or_r_q_cb), // OR_R_Q
-	new op_t("XOR  R(#0x%02X) #0x%02X   ", 0xD00, MASK_6B , 4, 0x030, 7 , op_xor_r_i_cb), // XOR_R_I
-	new op_t("XOR  R(#0x%02X) Q(#0x%02X)", 0xAE0, MASK_8B , 2, 0x00C, 7 , op_xor_r_q_cb), // XOR_R_Q
-	new op_t("CP   R(#0x%02X) #0x%02X   ", 0xDC0, MASK_6B , 4, 0x030, 7 , op_cp_r_i_cb), // CP_R_I
-	new op_t("CP   R(#0x%02X) Q(#0x%02X)", 0xF00, MASK_8B , 2, 0x00C, 7 , op_cp_r_q_cb), // CP_R_Q
-	new op_t("FAN  R(#0x%02X) #0x%02X   ", 0xD80, MASK_6B , 4, 0x030, 7 , op_fan_r_i_cb), // FAN_R_I
-	new op_t("FAN  R(#0x%02X) Q(#0x%02X)", 0xF10, MASK_8B , 2, 0x00C, 7 , op_fan_r_q_cb), // FAN_R_Q
-	new op_t("RLC  R(#0x%02X)         "  , 0xAF0, MASK_8B , 0, 0    , 7 , op_rlc_cb), // RLC
-	new op_t("RRC  R(#0x%02X)         "  , 0xE8C, MASK_10B, 0, 0    , 5 , op_rrc_cb), // RRC
-	new op_t("INC  M(#0x%02X)         "  , 0xF60, MASK_8B , 0, 0    , 7 , op_inc_mn_cb), // INC_MN
-	new op_t("DEC  M(#0x%02X)         "  , 0xF70, MASK_8B , 0, 0    , 7 , op_dec_mn_cb), // DEC_MN
-	new op_t("ACPX R(#0x%02X)         "  , 0xF28, MASK_10B, 0, 0    , 7 , op_acpx_cb), // ACPX
-	new op_t("ACPY R(#0x%02X)         "  , 0xF2C, MASK_10B, 0, 0    , 7 , op_acpy_cb), // ACPY
-	new op_t("SCPX R(#0x%02X)         "  , 0xF38, MASK_10B, 0, 0    , 7 , op_scpx_cb), // SCPX
-	new op_t("SCPY R(#0x%02X)         "  , 0xF3C, MASK_10B, 0, 0    , 7 , op_scpy_cb), // SCPY
-	new op_t("NOT  R(#0x%02X)         "  , 0xD0F, 0xFCF   , 4, 0    , 7 , op_not_cb), // NOT
+	new op_t(`PSET #0x%02X              `, 0xE40, MASK_7B , 0, 0    , 5 , op_pset_cb), // PSET
+	new op_t(`JP   #0x%02X              `, 0x000, MASK_4B , 0, 0    , 5 , op_jp_cb), // JP
+	new op_t(`JP   C #0x%02X            `, 0x200, MASK_4B , 0, 0    , 5 , op_jp_c_cb), // JP_C
+	new op_t(`JP   NC #0x%02X           `, 0x300, MASK_4B , 0, 0    , 5 , op_jp_nc_cb), // JP_NC
+	new op_t(`JP   Z #0x%02X            `, 0x600, MASK_4B , 0, 0    , 5 , op_jp_z_cb), // JP_Z
+	new op_t(`JP   NZ #0x%02X           `, 0x700, MASK_4B , 0, 0    , 5 , op_jp_nz_cb), // JP_NZ
+	new op_t(`JPBA                      `, 0xFE8, MASK_12B, 0, 0    , 5 , op_jpba_cb), // JPBA
+	new op_t(`CALL #0x%02X              `, 0x400, MASK_4B , 0, 0    , 7 , op_call_cb), // CALL
+	new op_t(`CALZ #0x%02X              `, 0x500, MASK_4B , 0, 0    , 7 , op_calz_cb), // CALZ
+	new op_t(`RET                       `, 0xFDF, MASK_12B, 0, 0    , 7 , op_ret_cb), // RET
+	new op_t(`RETS                      `, 0xFDE, MASK_12B, 0, 0    , 12, op_rets_cb), // RETS
+	new op_t(`RETD #0x%02X              `, 0x100, MASK_4B , 0, 0    , 12, op_retd_cb), // RETD
+	new op_t(`NOP5                      `, 0xFFB, MASK_12B, 0, 0    , 5 , op_nop5_cb), // NOP5
+	new op_t(`NOP7                      `, 0xFFF, MASK_12B, 0, 0    , 7 , op_nop7_cb), // NOP7
+	new op_t(`HALT                      `, 0xFF8, MASK_12B, 0, 0    , 5 , op_halt_cb), // HALT
+	new op_t(`INC  X #0x%02X            `, 0xEE0, MASK_12B, 0, 0    , 5 , op_inc_x_cb), // INC_X
+	new op_t(`INC  Y #0x%02X            `, 0xEF0, MASK_12B, 0, 0    , 5 , op_inc_y_cb), // INC_Y
+	new op_t(`LD   X #0x%02X            `, 0xB00, MASK_4B , 0, 0    , 5 , op_ld_x_cb), // LD_X
+	new op_t(`LD   Y #0x%02X            `, 0x800, MASK_4B , 0, 0    , 5 , op_ld_y_cb), // LD_Y
+	new op_t(`LD   XP R(#0x%02X)        `, 0xE80, MASK_10B, 0, 0    , 5 , op_ld_xp_r_cb), // LD_XP_R
+	new op_t(`LD   XH R(#0x%02X)        `, 0xE84, MASK_10B, 0, 0    , 5 , op_ld_xh_r_cb), // LD_XH_R
+	new op_t(`LD   XL R(#0x%02X)        `, 0xE88, MASK_10B, 0, 0    , 5 , op_ld_xl_r_cb), // LD_XL_R
+	new op_t(`LD   YP R(#0x%02X)        `, 0xE90, MASK_10B, 0, 0    , 5 , op_ld_yp_r_cb), // LD_YP_R
+	new op_t(`LD   YH R(#0x%02X)        `, 0xE94, MASK_10B, 0, 0    , 5 , op_ld_yh_r_cb), // LD_YH_R
+	new op_t(`LD   YL R(#0x%02X)        `, 0xE98, MASK_10B, 0, 0    , 5 , op_ld_yl_r_cb), // LD_YL_R
+	new op_t(`LD   R(#0x%02X) XP        `, 0xEA0, MASK_10B, 0, 0    , 5 , op_ld_r_xp_cb), // LD_R_XP
+	new op_t(`LD   R(#0x%02X) XH        `, 0xEA4, MASK_10B, 0, 0    , 5 , op_ld_r_xh_cb), // LD_R_XH
+	new op_t(`LD   R(#0x%02X) XL        `, 0xEA8, MASK_10B, 0, 0    , 5 , op_ld_r_xl_cb), // LD_R_XL
+	new op_t(`LD   R(#0x%02X) YP        `, 0xEB0, MASK_10B, 0, 0    , 5 , op_ld_r_yp_cb), // LD_R_YP
+	new op_t(`LD   R(#0x%02X) YH        `, 0xEB4, MASK_10B, 0, 0    , 5 , op_ld_r_yh_cb), // LD_R_YH
+	new op_t(`LD   R(#0x%02X) YL        `, 0xEB8, MASK_10B, 0, 0    , 5 , op_ld_r_yl_cb), // LD_R_YL
+	new op_t(`ADC  XH #0x%02X           `, 0xA00, MASK_8B , 0, 0    , 7 , op_adc_xh_cb), // ADC_XH
+	new op_t(`ADC  XL #0x%02X           `, 0xA10, MASK_8B , 0, 0    , 7 , op_adc_xl_cb), // ADC_XL
+	new op_t(`ADC  YH #0x%02X           `, 0xA20, MASK_8B , 0, 0    , 7 , op_adc_yh_cb), // ADC_YH
+	new op_t(`ADC  YL #0x%02X           `, 0xA30, MASK_8B , 0, 0    , 7 , op_adc_yl_cb), // ADC_YL
+	new op_t(`CP   XH #0x%02X           `, 0xA40, MASK_8B , 0, 0    , 7 , op_cp_xh_cb), // CP_XH
+	new op_t(`CP   XL #0x%02X           `, 0xA50, MASK_8B , 0, 0    , 7 , op_cp_xl_cb), // CP_XL
+	new op_t(`CP   YH #0x%02X           `, 0xA60, MASK_8B , 0, 0    , 7 , op_cp_yh_cb), // CP_YH
+	new op_t(`CP   YL #0x%02X           `, 0xA70, MASK_8B , 0, 0    , 7 , op_cp_yl_cb), // CP_YL
+	new op_t(`LD   R(#0x%02X) #0x%02X   `, 0xE00, MASK_6B , 4, 0x030, 5 , op_ld_r_i_cb), // LD_R_I
+	new op_t(`LD   R(#0x%02X) Q(#0x%02X)`, 0xEC0, MASK_8B , 2, 0x00C, 5 , op_ld_r_q_cb), // LD_R_Q
+	new op_t(`LD   A M(#0x%02X)         `, 0xFA0, MASK_8B , 0, 0    , 5 , op_ld_a_mn_cb), // LD_A_MN
+	new op_t(`LD   B M(#0x%02X)         `, 0xFB0, MASK_8B , 0, 0    , 5 , op_ld_b_mn_cb), // LD_B_MN
+	new op_t(`LD   M(#0x%02X) A         `, 0xF80, MASK_8B , 0, 0    , 5 , op_ld_mn_a_cb), // LD_MN_A
+	new op_t(`LD   M(#0x%02X) B         `, 0xF90, MASK_8B , 0, 0    , 5 , op_ld_mn_b_cb), // LD_MN_B
+	new op_t(`LDPX MX #0x%02X           `, 0xE60, MASK_8B , 0, 0    , 5 , op_ldpx_mx_cb), // LDPX_MX
+	new op_t(`LDPX R(#0x%02X) Q(#0x%02X)`, 0xEE0, MASK_8B , 2, 0x00C, 5 , op_ldpx_r_cb), // LDPX_R
+	new op_t(`LDPY MY #0x%02X           `, 0xE70, MASK_8B , 0, 0    , 5 , op_ldpy_my_cb), // LDPY_MY
+	new op_t(`LDPY R(#0x%02X) Q(#0x%02X)`, 0xEF0, MASK_8B , 2, 0x00C, 5 , op_ldpy_r_cb), // LDPY_R
+	new op_t(`LBPX #0x%02X              `, 0x900, MASK_4B , 0, 0    , 5 , op_lbpx_cb), // LBPX
+	new op_t(`SET  #0x%02X              `, 0xF40, MASK_8B , 0, 0    , 7 , op_set_cb), // SET
+	new op_t(`RST  #0x%02X              `, 0xF50, MASK_8B , 0, 0    , 7 , op_rst_cb), // RST
+	new op_t(`SCF                       `, 0xF41, MASK_12B, 0, 0    , 7 , op_scf_cb), // SCF
+	new op_t(`RCF                       `, 0xF5E, MASK_12B, 0, 0    , 7 , op_rcf_cb), // RCF
+	new op_t(`SZF                       `, 0xF42, MASK_12B, 0, 0    , 7 , op_szf_cb), // SZF
+	new op_t(`RZF                       `, 0xF5D, MASK_12B, 0, 0    , 7 , op_rzf_cb), // RZF
+	new op_t(`SDF                       `, 0xF44, MASK_12B, 0, 0    , 7 , op_sdf_cb), // SDF
+	new op_t(`RDF                       `, 0xF5B, MASK_12B, 0, 0    , 7 , op_rdf_cb), // RDF
+	new op_t(`EI                        `, 0xF48, MASK_12B, 0, 0    , 7 , op_ei_cb), // EI
+	new op_t(`DI                        `, 0xF57, MASK_12B, 0, 0    , 7 , op_di_cb), // DI
+	new op_t(`INC  SP                   `, 0xFDB, MASK_12B, 0, 0    , 5 , op_inc_sp_cb), // INC_SP
+	new op_t(`DEC  SP                   `, 0xFCB, MASK_12B, 0, 0    , 5 , op_dec_sp_cb), // DEC_SP
+	new op_t(`PUSH R(#0x%02X)           `, 0xFC0, MASK_10B, 0, 0    , 5 , op_push_r_cb), // PUSH_R
+	new op_t(`PUSH XP                   `, 0xFC4, MASK_12B, 0, 0    , 5 , op_push_xp_cb), // PUSH_XP
+	new op_t(`PUSH XH                   `, 0xFC5, MASK_12B, 0, 0    , 5 , op_push_xh_cb), // PUSH_XH
+	new op_t(`PUSH XL                   `, 0xFC6, MASK_12B, 0, 0    , 5 , op_push_xl_cb), // PUSH_XL
+	new op_t(`PUSH YP                   `, 0xFC7, MASK_12B, 0, 0    , 5 , op_push_yp_cb), // PUSH_YP
+	new op_t(`PUSH YH                   `, 0xFC8, MASK_12B, 0, 0    , 5 , op_push_yh_cb), // PUSH_YH
+	new op_t(`PUSH YL                   `, 0xFC9, MASK_12B, 0, 0    , 5 , op_push_yl_cb), // PUSH_YL
+	new op_t(`PUSH F                    `, 0xFCA, MASK_12B, 0, 0    , 5 , op_push_f_cb), // PUSH_F
+	new op_t(`POP  R(#0x%02X)           `, 0xFD0, MASK_10B, 0, 0    , 5 , op_pop_r_cb), // POP_R
+	new op_t(`POP  XP                   `, 0xFD4, MASK_12B, 0, 0    , 5 , op_pop_xp_cb), // POP_XP
+	new op_t(`POP  XH                   `, 0xFD5, MASK_12B, 0, 0    , 5 , op_pop_xh_cb), // POP_XH
+	new op_t(`POP  XL                   `, 0xFD6, MASK_12B, 0, 0    , 5 , op_pop_xl_cb), // POP_XL
+	new op_t(`POP  YP                   `, 0xFD7, MASK_12B, 0, 0    , 5 , op_pop_yp_cb), // POP_YP
+	new op_t(`POP  YH                   `, 0xFD8, MASK_12B, 0, 0    , 5 , op_pop_yh_cb), // POP_YH
+	new op_t(`POP  YL                   `, 0xFD9, MASK_12B, 0, 0    , 5 , op_pop_yl_cb), // POP_YL
+	new op_t(`POP  F                    `, 0xFDA, MASK_12B, 0, 0    , 5 , op_pop_f_cb), // POP_F
+	new op_t(`LD   SPH R(#0x%02X)       `, 0xFE0, MASK_10B, 0, 0    , 5 , op_ld_sph_r_cb), // LD_SPH_R
+	new op_t(`LD   SPL R(#0x%02X)       `, 0xFF0, MASK_10B, 0, 0    , 5 , op_ld_spl_r_cb), // LD_SPL_R
+	new op_t(`LD   R(#0x%02X) SPH       `, 0xFE4, MASK_10B, 0, 0    , 5 , op_ld_r_sph_cb), // LD_R_SPH
+	new op_t(`LD   R(#0x%02X) SPL       `, 0xFF4, MASK_10B, 0, 0    , 5 , op_ld_r_spl_cb), // LD_R_SPL
+	new op_t(`ADD  R(#0x%02X) #0x%02X   `, 0xC00, MASK_6B , 4, 0x030, 7 , op_add_r_i_cb), // ADD_R_I
+	new op_t(`ADD  R(#0x%02X) Q(#0x%02X)`, 0xA80, MASK_8B , 2, 0x00C, 7 , op_add_r_q_cb), // ADD_R_Q
+	new op_t(`ADC  R(#0x%02X) #0x%02X   `, 0xC40, MASK_6B , 4, 0x030, 7 , op_adc_r_i_cb), // ADC_R_I
+	new op_t(`ADC  R(#0x%02X) Q(#0x%02X)`, 0xA90, MASK_8B , 2, 0x00C, 7 , op_adc_r_q_cb), // ADC_R_Q
+	new op_t(`SUB  R(#0x%02X) Q(#0x%02X)`, 0xAA0, MASK_8B , 2, 0x00C, 7 , op_sub_cb), // SUB
+	new op_t(`SBC  R(#0x%02X) #0x%02X   `, 0xB40, MASK_6B , 4, 0x030, 7 , op_sbc_r_i_cb), // SBC_R_I
+	new op_t(`SBC  R(#0x%02X) Q(#0x%02X)`, 0xAB0, MASK_8B , 2, 0x00C, 7 , op_sbc_r_q_cb), // SBC_R_Q
+	new op_t(`AND  R(#0x%02X) #0x%02X   `, 0xC80, MASK_6B , 4, 0x030, 7 , op_and_r_i_cb), // AND_R_I
+	new op_t(`AND  R(#0x%02X) Q(#0x%02X)`, 0xAC0, MASK_8B , 2, 0x00C, 7 , op_and_r_q_cb), // AND_R_Q
+	new op_t(`OR   R(#0x%02X) #0x%02X   `, 0xCC0, MASK_6B , 4, 0x030, 7 , op_or_r_i_cb), // OR_R_I
+	new op_t(`OR   R(#0x%02X) Q(#0x%02X)`, 0xAD0, MASK_8B , 2, 0x00C, 7 , op_or_r_q_cb), // OR_R_Q
+	new op_t(`XOR  R(#0x%02X) #0x%02X   `, 0xD00, MASK_6B , 4, 0x030, 7 , op_xor_r_i_cb), // XOR_R_I
+	new op_t(`XOR  R(#0x%02X) Q(#0x%02X)`, 0xAE0, MASK_8B , 2, 0x00C, 7 , op_xor_r_q_cb), // XOR_R_Q
+	new op_t(`CP   R(#0x%02X) #0x%02X   `, 0xDC0, MASK_6B , 4, 0x030, 7 , op_cp_r_i_cb), // CP_R_I
+	new op_t(`CP   R(#0x%02X) Q(#0x%02X)`, 0xF00, MASK_8B , 2, 0x00C, 7 , op_cp_r_q_cb), // CP_R_Q
+	new op_t(`FAN  R(#0x%02X) #0x%02X   `, 0xD80, MASK_6B , 4, 0x030, 7 , op_fan_r_i_cb), // FAN_R_I
+	new op_t(`FAN  R(#0x%02X) Q(#0x%02X)`, 0xF10, MASK_8B , 2, 0x00C, 7 , op_fan_r_q_cb), // FAN_R_Q
+	new op_t(`RLC  R(#0x%02X)           `, 0xAF0, MASK_8B , 0, 0    , 7 , op_rlc_cb), // RLC
+	new op_t(`RRC  R(#0x%02X)           `, 0xE8C, MASK_10B, 0, 0    , 5 , op_rrc_cb), // RRC
+	new op_t(`INC  M(#0x%02X)           `, 0xF60, MASK_8B , 0, 0    , 7 , op_inc_mn_cb), // INC_MN
+	new op_t(`DEC  M(#0x%02X)           `, 0xF70, MASK_8B , 0, 0    , 7 , op_dec_mn_cb), // DEC_MN
+	new op_t(`ACPX R(#0x%02X)           `, 0xF28, MASK_10B, 0, 0    , 7 , op_acpx_cb), // ACPX
+	new op_t(`ACPY R(#0x%02X)           `, 0xF2C, MASK_10B, 0, 0    , 7 , op_acpy_cb), // ACPY
+	new op_t(`SCPX R(#0x%02X)           `, 0xF38, MASK_10B, 0, 0    , 7 , op_scpx_cb), // SCPX
+	new op_t(`SCPY R(#0x%02X)           `, 0xF3C, MASK_10B, 0, 0    , 7 , op_scpy_cb), // SCPY
+	new op_t(`NOT  R(#0x%02X)           `, 0xD0F, 0xFCF   , 4, 0    , 7 , op_not_cb), // NOT
 
 	new op_t(NULL, 0, 0, 0, 0, 0, NULL)
 ];
@@ -1641,8 +1653,9 @@ function print_state(op_num, op, addr) {
     if (!g_hal.is_log_enabled(log_level_t.LOG_CPU)) {
 		return;
 	}
-
-    g_hal.log(log_level_t.LOG_CPU, "0x%04X: ", addr);
+    
+    g_hal.log(log_level_t.LOG_CPU, NumToHex(addr, 4) + ": ");
+    //g_hal.log(log_level_t.LOG_CPU, "0x%04X: ", addr);
 
 	for (i = 0; i < call_depth; i++) {
         g_hal.log(log_level_t.LOG_CPU, "  ");
@@ -1662,11 +1675,14 @@ function print_state(op_num, op, addr) {
 		}
 	}
 
-	g_hal.log(log_level_t.LOG_CPU, " ; 0x%03X - ", op);
+    g_hal.log(log_level_t.LOG_CPU, " ; " + NumToHex(op, 3) + " - ");
+	//g_hal.log(log_level_t.LOG_CPU, " ; 0x%03X - ", op);
 	for (i = 0; i < 12; i++) {
-		g_hal.log(log_level_t.LOG_CPU, "%s", ((op >> (11 - i)) & 0x1) ? "1" : "0");
+		g_hal.log(log_level_t.LOG_CPU, ((op >> (11 - i)) & 0x1) ? "1" : "0");
+        //g_hal.log(log_level_t.LOG_CPU, "%s", ((op >> (11 - i)) & 0x1) ? "1" : "0");
 	}
-	g_hal.log(log_level_t.LOG_CPU, " - PC = 0x%04X, SP = 0x%02X, NP = 0x%02X, X = 0x%03X, Y = 0x%03X, A = 0x%X, B = 0x%X, F = 0x%X\n", pc, sp, np, x, y, a, b, flags);
+    g_hal.log(log_level_t.LOG_CPU, ` - PC = ${NumToHex(pc, 4)}, SP = ${NumToHex(sp, 2)}, NP = ${NumToHex(np, 2)}, X = ${NumToHex(x, 3)}, Y = ${NumToHex(y, 3)}, A = ${NumToHex(a, 0)}, B = ${NumToHex(b, 0)}, F = ${NumToHex(flags, 0)}\n`);
+	//g_hal.log(log_level_t.LOG_CPU, " - PC = 0x%04X, SP = 0x%02X, NP = 0x%02X, X = 0x%03X, Y = 0x%03X, A = 0x%X, B = 0x%X, F = 0x%X\n", pc, sp, np, x, y, a, b, flags);
 }
 
 function cpu_reset() {
@@ -1707,11 +1723,12 @@ function cpu_init(program, breakpoints, freq) {
 function cpu_release() {
 }
 
+let previous_cycles = 0;
+
 function cpu_step() {
 	let op;
 	let i;
 	let bp = g_breakpoints;
-	let previous_cycles = 0;
 
 	op = g_program[pc];
 
@@ -1723,7 +1740,8 @@ function cpu_step() {
 	}
 
 	if (ops[i].log == NULL) {
-        g_hal.log(log_level_t.LOG_ERROR, "Unknown op-code 0x%X (pc = 0x%04X)\n", op, pc);
+        g_hal.log(log_level_t.LOG_ERROR, `Unknown op-code ${NumToHex(op, 0)} (pc = ${NumToHex(pc, 4)})\n`);
+        //g_hal.log(log_level_t.LOG_ERROR, "Unknown op-code 0x%X (pc = 0x%04X)\n", op, pc);
 		return 1;
 	}
 

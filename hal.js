@@ -1,5 +1,21 @@
-//const canvas = document.getElementById("canvas");
-//const ctx = canvas.getContext("2d");
+let slogBuffer = "";
+
+function slog(str, args)
+{
+    let i = 0;
+    let formattedStr = str;
+    let regex = new RegExp("0x%02X");
+    while(formattedStr.includes("0x%02X")) {
+        formattedStr = formattedStr.replace(regex, NumToHex(args[i], 2)); //should replace only first occurence
+        i++;
+    }
+    slogBuffer += formattedStr;
+    
+    if (formattedStr.charAt(formattedStr.length - 1) == '\n') { //check for newline
+        console.log(slogBuffer);
+        slogBuffer = ""; //clear the buffer
+    }
+}
 
 const NULL = 0;
 
@@ -34,7 +50,7 @@ const hal_t = {
     * NOTE: Needed only if log messages are required.
     */
     is_log_enabled: (level) => {
-        return false;// true;
+        return false;//true;
     },
     log: (level, buff, ...args) => {
         // unused
@@ -45,7 +61,7 @@ const hal_t = {
         {
             case log_level_t.LOG_ERROR:
                 level_str = "[LOG ERROR]";
-                console.error("ERROR: " + buff);
+                //console.error("ERROR: " + buff);
                 break;
             case log_level_t.LOG_INFO:
                 level_str = "[LOG INFO]";
@@ -57,7 +73,14 @@ const hal_t = {
                 level_str = "[LOG CPU]";
                 break;
         }
-        console.log(level_str + " "  +buff);
+        /*
+        if (args.length == 0) {
+            console.log(buff);
+        } else {
+            console.log(buff, args);
+        }*/
+        slog(buff, args);
+        //console.log(level_str + " "  +buff);
     },
 
     /* Clock related functions
