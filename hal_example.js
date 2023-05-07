@@ -1,3 +1,5 @@
+let showScreen = true;
+const pixelSize = 10;
 let slogBuffer = "";
 
 function slog(str, args)
@@ -79,8 +81,10 @@ const hal_t = {
         // Implement this function
     },
     set_lcd_matrix: (x, y, val) => {
-        ctx.fillStyle = val? '#000000' : '#AAAAAA';
-        ctx.fillRect(x*10, y * 10, 10, 10)
+        if (showScreen) {
+            ctx.fillStyle = val? '#000000' : '#AAAAAA';
+            ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize - 1 , pixelSize - 1);
+        }
     },
     set_lcd_icon: (icon, val) => {
         // Implement this function

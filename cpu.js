@@ -18,7 +18,7 @@ const MEM_IO_SIZE		                    = 0x080;
 /* Asign this value to true if you want to reduce the footprint of the memory buffer from 4096 u4_t (most likely bytes)
  * to 464 u8_t (bytes for sure), while increasing slightly the number of operations needed to read/write from/to it.
  */
-const LOW_FOOTPRINT                         = false;//true;
+const LOW_FOOTPRINT                         = true;
 
 let MEM_BUFFER_SIZE;
 let RAM_TO_MEMORY;
