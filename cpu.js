@@ -368,6 +368,30 @@ function cpu_get_state() {
     return cpu_state;
 }
 
+function cpu_set_state(state) {
+    pc = state.pc;
+    x = state.x;
+    y = state.y;
+    a = state.a;
+    b = state.b;
+    np = state.np;
+    sp = state.sp;
+    flags = state.flags;
+    
+    tick_counter = state.tick_counter;
+    clk_timer_timestamp = state.clk_timer_timestamp;
+    prog_timer_timestamp = state.prog_timer_timestamp;
+    prog_timer_enabled = state.prog_timer_enabled;
+    prog_timer_data = state.prog_timer_data;
+    prog_timer_rld = state.prog_timer_rld;
+    
+    call_depth = state.call_depth;
+    
+    interrupts = state.interrupts;
+    
+    memory = state.memory;
+}
+
 function cpu_get_depth() {
     return call_depth;
 }
@@ -1718,6 +1742,17 @@ function cpu_init(program, breakpoints, freq) {
 	cpu_reset();
 
 	return 0;
+}
+
+function cpu_init_from_state(program, state, breakpoints, freq) {
+    g_program = program;
+    g_breakpoints = breakpoints;
+    ts_freq = freq;
+    
+    cpu_set_state(state);
+    cpu_sync_ref_timestamp();
+    
+    return 0;
 }
 
 function cpu_release() {

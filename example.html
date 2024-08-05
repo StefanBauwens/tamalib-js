@@ -84,6 +84,16 @@
                 setTimeout(myLoop, 4);
             }
             
+            function setState(stateStr) {
+                // in some cases you may want to handle screen caching yourself
+                cpu_init_from_state(my_program, JSON.parse(stateStr), NULL, 1000000);
+            }
+            
+            function getState() {
+                let state = JSON.stringify(tamalib_get_state());
+                console.log(state);
+            }
+            
             tamalib_register_hal(hal_t);
             tamalib_init(my_program, NULL, 1000000);
             myLoop();            
