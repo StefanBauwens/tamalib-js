@@ -11,16 +11,27 @@ const btn_state_t = {
 const button_t = {
     BTN_LEFT: 0,
     BTN_MIDDLE: 1,
-	BTN_RIGHT: 2
+	BTN_RIGHT: 2,
+    BTN_TAP: 3
 };
 
-const seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39];
+/* SEG -> LCD mapping */
+let seg_pos = [];
+
+if (E0C6S48_SUPPORT) {
+    /* 51 segments */
+    seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+} else if (E0C6S46_SUPPORT) {
+    /* 40 segments */
+    seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39];
+}
 
 function hw_init() {
-    /* Buttons are active LOW */
+    /* Buttons/Tap sensor are active LOW */
     cpu_set_input_pin(pin_t.PIN_K00, pin_state_t.PIN_STATE_HIGH);
     cpu_set_input_pin(pin_t.PIN_K01, pin_state_t.PIN_STATE_HIGH);
     cpu_set_input_pin(pin_t.PIN_K02, pin_state_t.PIN_STATE_HIGH);
+    cpu_set_input_pin(pin_t.PIN_K03, pin_state_t.PIN_STATE_HIGH);
 
     return 0;
 }
@@ -29,6 +40,7 @@ function hw_release() {
 }
 
 function hw_set_lcd_pin(seg, com, val) {
+    //printf("   hw_set_lcd_pin: seg = %u, com = %u, val = %u\n", seg, com, val);
     if (seg_pos[seg] < LCD_WIDTH) {
         g_hal.set_lcd_matrix(seg_pos[seg], com, val);
     } else {
@@ -55,6 +67,10 @@ function hw_set_button(btn, state) {
     let pin_state = (state == btn_state_t.BTN_STATE_PRESSED) ? pin_state_t.PIN_STATE_LOW : pin_state_t.PIN_STATE_HIGH;
 
     switch (btn) {
+        case button_t.BTN_TAP:
+			cpu_set_input_pin(pin_t.PIN_K03, pin_state);
+			break;
+
         case button_t.BTN_LEFT:
             cpu_set_input_pin(pin_t.PIN_K02, pin_state);
             break;
