@@ -1718,7 +1718,7 @@ const ops = [
 	new op_t(`DI                        `, 0xF57, MASK_12B, 0, 0    , 7 , op_di_cb), // DI
 	new op_t(`INC  SP                   `, 0xFDB, MASK_12B, 0, 0    , 5 , op_inc_sp_cb), // INC_SP
 	new op_t(`DEC  SP                   `, 0xFCB, MASK_12B, 0, 0    , 5 , op_dec_sp_cb), // DEC_SP
-	new op_t(`PUSH R(%X)	           `, 0xFC0, MASK_10B, 0, 0    , 5 , op_push_r_cb), // PUSH_R
+	new op_t(`PUSH R(%X)	           	`, 0xFC0, MASK_10B, 0, 0    , 5 , op_push_r_cb), // PUSH_R
 	new op_t(`PUSH XP                   `, 0xFC4, MASK_12B, 0, 0    , 5 , op_push_xp_cb), // PUSH_XP
 	new op_t(`PUSH XH                   `, 0xFC5, MASK_12B, 0, 0    , 5 , op_push_xh_cb), // PUSH_XH
 	new op_t(`PUSH XL                   `, 0xFC6, MASK_12B, 0, 0    , 5 , op_push_xl_cb), // PUSH_XL
@@ -1743,7 +1743,7 @@ const ops = [
 	new op_t(`ADC  R(%X) #0x%02X		`, 0xC40, MASK_6B , 4, 0x030, 7 , op_adc_r_i_cb), // ADC_R_I
 	new op_t(`ADC  R(%X) Q(%X)  		`, 0xA90, MASK_8B , 2, 0x00C, 7 , op_adc_r_q_cb), // ADC_R_Q
 	new op_t(`SUB  R(%X) Q(%X)  		`, 0xAA0, MASK_8B , 2, 0x00C, 7 , op_sub_cb), // SUB
-	new op_t(`SBC  R(%X) #0x%02X		`, 0xB40, MASK_6B , 4, 0x030, 7 , op_sbc_r_i_cb), // SBC_R_I
+	new op_t(`SBC  R(%X) #0x%02X		`, 0xD40, MASK_6B , 4, 0x030, 7 , op_sbc_r_i_cb), // SBC_R_I
 	new op_t(`SBC  R(%X) Q(%X)  		`, 0xAB0, MASK_8B , 2, 0x00C, 7 , op_sbc_r_q_cb), // SBC_R_Q
 	new op_t(`AND  R(%X) #0x%02X		`, 0xC80, MASK_6B , 4, 0x030, 7 , op_and_r_i_cb), // AND_R_I
 	new op_t(`AND  R(%X) Q(%X)  		`, 0xAC0, MASK_8B , 2, 0x00C, 7 , op_and_r_q_cb), // AND_R_Q
