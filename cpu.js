@@ -436,7 +436,14 @@ function cpu_get_state() {
     cpu_state.flags = flags;
 
     cpu_state.tick_counter = tick_counter;
-    cpu_state.clk_timer_timestamp = clk_timer_timestamp;
+	cpu_state.clk_timer_2hz_timestamp = clk_timer_2hz_timestamp;
+	cpu_state.clk_timer_4hz_timestamp = clk_timer_4hz_timestamp;
+	cpu_state.clk_timer_8hz_timestamp = clk_timer_8hz_timestamp;
+	cpu_state.clk_timer_16hz_timestamp = clk_timer_16hz_timestamp;
+	cpu_state.clk_timer_32hz_timestamp = clk_timer_32hz_timestamp;
+	cpu_state.clk_timer_64hz_timestamp = clk_timer_64hz_timestamp;
+	cpu_state.clk_timer_128hz_timestamp = clk_timer_128hz_timestamp;
+	cpu_state.clk_timer_256hz_timestamp = clk_timer_256hz_timestamp;
     cpu_state.prog_timer_timestamp = prog_timer_timestamp;
     cpu_state.prog_timer_enabled = prog_timer_enabled;
     cpu_state.prog_timer_data = prog_timer_data;
@@ -461,7 +468,14 @@ function cpu_set_state(state) {
     flags = state.flags;
     
     tick_counter = state.tick_counter;
-    clk_timer_timestamp = state.clk_timer_timestamp;
+	clk_timer_2hz_timestamp = state.clk_timer_2hz_timestamp;
+	clk_timer_4hz_timestamp = state.clk_timer_4hz_timestamp;
+	clk_timer_8hz_timestamp = state.clk_timer_8hz_timestamp;
+	clk_timer_16hz_timestamp = state.clk_timer_16hz_timestamp;
+	clk_timer_32hz_timestamp = state.clk_timer_32hz_timestamp;
+	clk_timer_64hz_timestamp = state.clk_timer_64hz_timestamp;
+	clk_timer_128hz_timestamp = state.clk_timer_128hz_timestamp;
+	clk_timer_256hz_timestamp = state.clk_timer_256hz_timestamp;
     prog_timer_timestamp = state.prog_timer_timestamp;
     prog_timer_enabled = state.prog_timer_enabled;
     prog_timer_data = state.prog_timer_data;
