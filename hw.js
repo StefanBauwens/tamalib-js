@@ -15,16 +15,23 @@ const button_t = {
     BTN_TAP: 3
 };
 
-let isDigimon = true; //TODO improve
+const rom_type_t =  {
+    P1P2: 0xFA2,
+    ANGEL: 0xFC4,
+    DIGIMON: 0x587,
+    MOTHRA: 0x581
+}
+
+let rom_type = my_program[0]; // determine rom type based off first value in ROM
 
 /* SEG -> LCD mapping */
 let seg_pos = [];
 
 if (E0C6S48_SUPPORT) {
     /* 51 segments */
-    if (isDigimon) {
+    if (rom_type == rom_type_t.DIGIMON) {
         seg_pos = [32, 0, 1, 2, 3, 4, 5, 6, 7, 33, 34, 35, 8, 9, 10, 11, 12, 13, 14, 15, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
-    } else { // angel 
+    } else { // angel, mothra
         seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
     }
 
@@ -52,7 +59,11 @@ var seggers = {};
 function hw_set_lcd_pin(seg, com, val) {
     //printf("   hw_set_lcd_pin: seg = %u, com = %u, val = %u\n", seg, com, val);
     if (seg_pos[seg] < LCD_WIDTH) {
-        g_hal.set_lcd_matrix(isDigimon? (LCD_WIDTH - 1) - seg_pos[seg] : seg_pos[seg], isDigimon? (LCD_HEIGHT - 1) - com : com, val);
+        if (rom_type == rom_type_t.DIGIMON) {
+            g_hal.set_lcd_matrix((LCD_WIDTH - 1) - seg_pos[seg], (LCD_HEIGHT - 1) - com, val);
+        } else { // P1P2, angel, mothra
+            g_hal.set_lcd_matrix(seg_pos[seg], com, val);
+        }
     } else {
         /*
          * IC n -> seg-com|...
@@ -72,7 +83,7 @@ function hw_set_lcd_pin(seg, com, val) {
         }
         seggers[seg][com] = val;
 
-        if (isDigimon) {
+        if (rom_type == rom_type_t.DIGIMON) { //TODO is different for mothra: make it work
             if (com == 0) {
                 switch(seg) {
                     case 0:
@@ -104,7 +115,7 @@ function hw_set_lcd_pin(seg, com, val) {
                         break;
                 }
             }
-        } else {
+        } else { //TODO check for angel 
             if (seg == 8 && com < 4) {
                 g_hal.set_lcd_icon(com, val);
             } else if (seg == 28 && com >= 12) {
