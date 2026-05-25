@@ -5,6 +5,9 @@ let showScreen = true;
 const pixelSize = 10;
 let slogBuffer = "";
 
+var iconz = [0,0,0,0,0,0,0,0]; 
+var prevIconz = [1,1,1,1,1,1,1,1];
+
 function slog(str, args)
 {
     let i = 0;
@@ -91,6 +94,20 @@ const hal_t = {
         }
     },
     set_lcd_icon: (icon, val) => {
+        iconz[icon] = val;
+
+        let same = true;
+        for (let i = 0; i < iconz.length; i++) {
+            if (iconz[i] != prevIconz[i]) {
+                same = false;
+                break;
+            }
+        }
+        if (!same)
+        {
+            console.log(iconz);
+            prevIconz = Array.from(iconz);
+        }
         // Implement this function
     },
 
