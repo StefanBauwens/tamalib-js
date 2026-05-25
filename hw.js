@@ -15,12 +15,19 @@ const button_t = {
     BTN_TAP: 3
 };
 
+let isDigimon = true; //TODO improve
+
 /* SEG -> LCD mapping */
 let seg_pos = [];
 
 if (E0C6S48_SUPPORT) {
     /* 51 segments */
-    seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+    if (isDigimon) {
+        seg_pos = [32, 0, 1, 2, 3, 4, 5, 6, 7, 33, 34, 35, 8, 9, 10, 11, 12, 13, 14, 15, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+    } else { // angel 
+        seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+    }
+
 } else if (E0C6S46_SUPPORT) {
     /* 40 segments */
     seg_pos = [0, 1, 2, 3, 4, 5, 6, 7, 32, 8, 9, 10, 11, 12 ,13 ,14, 15, 33, 34, 35, 31, 30, 29, 28, 27, 26, 25, 24, 36, 23, 22, 21, 20, 19, 18, 17, 16, 37, 38, 39];
@@ -39,10 +46,13 @@ function hw_init() {
 function hw_release() {
 }
 
+var seggers = {};
+
+
 function hw_set_lcd_pin(seg, com, val) {
     //printf("   hw_set_lcd_pin: seg = %u, com = %u, val = %u\n", seg, com, val);
     if (seg_pos[seg] < LCD_WIDTH) {
-        g_hal.set_lcd_matrix(seg_pos[seg], com, val);
+        g_hal.set_lcd_matrix(isDigimon? (LCD_WIDTH - 1) - seg_pos[seg] : seg_pos[seg], isDigimon? (LCD_HEIGHT - 1) - com : com, val);
     } else {
         /*
          * IC n -> seg-com|...
@@ -55,10 +65,51 @@ function hw_set_lcd_pin(seg, com, val) {
          * IC 6 -> 28-14|37-15|39-12
          * IC 7 -> 28-15|38-12|39-13
          */
-        if (seg == 8 && com < 4) {
-            g_hal.set_lcd_icon(com, val);
-        } else if (seg == 28 && com >= 12) {
-            g_hal.set_lcd_icon(com - 8, val);
+
+        if (seggers[seg] === undefined)
+        {
+            seggers[seg] = {};
+        }
+        seggers[seg][com] = val;
+
+        if (isDigimon) {
+            if (com == 0) {
+                switch(seg) {
+                    case 0:
+                        g_hal.set_lcd_icon(7, val);
+                        break; 
+                    case 9:
+                        g_hal.set_lcd_icon(6, val);
+                        break;
+                    case 10:
+                        g_hal.set_lcd_icon(5, val);
+                        break;
+                    case 11:
+                        g_hal.set_lcd_icon(4, val);
+                        break;
+                }
+            } else if (com == 15) {
+                switch(seg) {
+                    case 28:
+                        g_hal.set_lcd_icon(0, val);
+                        break; 
+                    case 37:
+                        g_hal.set_lcd_icon(1, val);
+                        break;
+                    case 38:
+                        g_hal.set_lcd_icon(2, val);
+                        break;
+                    case 39:
+                        g_hal.set_lcd_icon(3, val);
+                        break;
+                }
+            }
+        } else {
+            if (seg == 8 && com < 4) {
+                g_hal.set_lcd_icon(com, val);
+            } else if (seg == 28 && com >= 12) {
+                g_hal.set_lcd_icon(com - 8, val);
+            }
         }
     }
 }
