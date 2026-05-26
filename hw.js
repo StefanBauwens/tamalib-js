@@ -54,6 +54,7 @@ function hw_release() {
 }
 
 var seggers = {};
+var prvSeggers = {};
 
 
 function hw_set_lcd_pin(seg, com, val) {
@@ -82,8 +83,13 @@ function hw_set_lcd_pin(seg, com, val) {
             seggers[seg] = {};
         }
         seggers[seg][com] = val;
+        /*if (JSON.stringify(seggers) != JSON.stringify(prvSeggers))
+        {
+            console.log(seggers);
+            prvSeggers = JSON.parse(JSON.stringify(seggers));
+        }*/
 
-        if (rom_type == rom_type_t.DIGIMON) { //TODO is different for mothra: make it work
+        if (rom_type == rom_type_t.DIGIMON) {
             if (com == 0) {
                 switch(seg) {
                     case 0:
@@ -115,7 +121,39 @@ function hw_set_lcd_pin(seg, com, val) {
                         break;
                 }
             }
-        } else { //TODO check for angel 
+        } else if (rom_type == rom_type_t.MOTHRA) {
+            if (com == 0) {
+                switch(seg) {
+                    case 8:
+                        g_hal.set_lcd_icon(0, val);
+                        break; 
+                    case 17:
+                        g_hal.set_lcd_icon(1, val);
+                        break;
+                    case 18:
+                        g_hal.set_lcd_icon(2, val);
+                        break;
+                    case 19:
+                        g_hal.set_lcd_icon(3, val);
+                        break;
+                }
+            } else if (com == 15) {
+                switch(seg) {
+                    case 28:
+                        g_hal.set_lcd_icon(7, val);
+                        break; 
+                    case 37:
+                        g_hal.set_lcd_icon(6, val);
+                        break;
+                    case 38:
+                        g_hal.set_lcd_icon(5, val);
+                        break;
+                    case 39:
+                        g_hal.set_lcd_icon(4, val);
+                        break;
+                }
+            }
+        } else {
             if (seg == 8 && com < 4) {
                 g_hal.set_lcd_icon(com, val);
             } else if (seg == 28 && com >= 12) {
